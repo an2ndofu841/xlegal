@@ -62,6 +62,14 @@ export default async function DashboardPage() {
                   </div>
                   <div className="flex shrink-0 items-center gap-4">
                     <StatusBadge status={r.status} />
+                    {r.status === "generated" && (
+                      <Link
+                        href={`/wizard/${r.id}/complete`}
+                        className="rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-brand-700"
+                      >
+                        ダウンロード →
+                      </Link>
+                    )}
                     <Link
                       href={`/wizard/${r.id}`}
                       className="text-sm font-medium text-brand-600 hover:underline"
