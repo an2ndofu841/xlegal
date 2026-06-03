@@ -20,7 +20,7 @@ export default function Home() {
           </p>
           <div className="mt-8 flex justify-center gap-4">
             <Link
-              href="/login"
+              href="/login?mode=signup"
               className="rounded-md bg-blue-600 px-6 py-3 font-medium text-white hover:bg-blue-700"
             >
               無料で始める
