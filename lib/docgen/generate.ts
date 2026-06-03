@@ -109,14 +109,17 @@ export function buildDocData(
         // §2: 管轄外移転の新所在地での登記と同時にのみ非表示措置を申出可能
         nondisclosure: relocation.apply_address_nondisclosure ? [{}] : [],
       };
-    case "minutes":
+    case "minutes": {
+      const totalVotes = shareholders.reduce((s, x) => s + x.voting_rights, 0);
       return {
         ...base,
         meeting_place: "本店会議室",
-        attending_count: "○",
-        attending_votes: "○",
+        attending_count:
+          shareholders.length > 0 ? shareholders.length.toLocaleString() : "○",
+        attending_votes: totalVotes > 0 ? totalVotes.toLocaleString() : "○",
         chair: company.rep_name,
       };
+    }
     case "director_decision_board":
       return { ...base, chair: company.rep_name };
     case "director_decision_majority":

@@ -77,9 +77,32 @@ function p(text = "", opts = {}) {
   return `<w:p><w:pPr>${pPrParts.join("")}</w:pPr>${body}</w:p>`;
 }
 
-/** 表題（中央・太字・15pt）。 */
+/** 表題（中央・太字・15pt・下罫線つき）。 */
 function title(text) {
-  return p(text, { align: "center", bold: true, size: 30, after: 240 });
+  return (
+    `<w:p><w:pPr>` +
+    `<w:pBdr><w:bottom w:val="single" w:sz="6" w:space="6" w:color="000000"/></w:pBdr>` +
+    `<w:jc w:val="center"/>` +
+    `<w:spacing w:before="0" w:after="240" w:line="300" w:lineRule="auto"/>` +
+    `<w:rPr>${FONT}<w:sz w:val="30"/><w:b/></w:rPr></w:pPr>` +
+    run(text, { bold: true, size: 30 }) +
+    `</w:p>`
+  );
+}
+
+/** 枠線で囲んだ単一セルのボックス（登記すべき事項などの強調用）。 */
+function box(innerParagraphs, width = CONTENT_WIDTH) {
+  const cell =
+    `<w:tc><w:tcPr><w:tcW w:w="${width}" w:type="dxa"/>` +
+    `<w:tcMar><w:top w:w="80" w:type="dxa"/><w:left w:w="160" w:type="dxa"/>` +
+    `<w:bottom w:w="80" w:type="dxa"/><w:right w:w="160" w:type="dxa"/></w:tcMar>` +
+    `</w:tcPr>${innerParagraphs}</w:tc>`;
+  return (
+    `<w:tbl><w:tblPr><w:tblW w:w="${width}" w:type="dxa"/>` +
+    `<w:jc w:val="center"/>${tblBorders()}<w:tblLook w:val="04A0"/></w:tblPr>` +
+    `<w:tblGrid><w:gridCol w:w="${width}"/></w:tblGrid>` +
+    `<w:tr>${cell}</w:tr></w:tbl>`
+  );
 }
 
 /** 空段落。 */
@@ -188,8 +211,9 @@ function applicationCommon(hontenPlaceholder) {
     item("商　　　　号", "{company_name}"),
     item("本　　　　店", hontenPlaceholder),
     item("登記の事由", "本店移転"),
-    p("１　登記すべき事項", {}),
-    p("{registration_matters}", { indent: 480, after: 120 }),
+    p("１　登記すべき事項", { after: 60 }),
+    box(p("{registration_matters}", { after: 0 })),
+    spacer(),
     item("登録免許税", "金{registration_tax}円"),
     p("１　添付書類", {}),
     // 添付書類ループ（1書類=1行）
@@ -240,7 +264,7 @@ const templates = {
       spacer(),
       p("第１号議案　定款一部変更の件", { bold: true }),
       p(
-        "　議長は、本店所在地を変更するため、定款第○条を変更し、本店を{new_minimum_district}に置く旨を提案し、審議の結果、満場一致をもって承認可決した。",
+        "　議長は、本店所在地を変更するため、定款中の本店の所在地に関する規定を変更し、本店を{new_minimum_district}に置く旨を提案し、審議の結果、満場一致をもって承認可決した。",
         { indent: 240 },
       ),
       p("　あわせて、本店移転の時期を{transfer_date_wareki}とすることを決議した。", {
