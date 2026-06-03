@@ -1,6 +1,7 @@
 import { redirect, notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import Wizard from "@/components/Wizard";
+import { isEnabled as isHoujinLookupEnabled } from "@/lib/houjin/lookup";
 import type { RelocationForm } from "@/lib/validation/schemas";
 
 export default async function WizardPage({
@@ -63,5 +64,11 @@ export default async function WizardPage({
     apply_address_nondisclosure: relocation.apply_address_nondisclosure ?? false,
   };
 
-  return <Wizard relocationId={relocationId} initialValues={initialValues} />;
+  return (
+    <Wizard
+      relocationId={relocationId}
+      initialValues={initialValues}
+      lookupEnabled={isHoujinLookupEnabled()}
+    />
+  );
 }

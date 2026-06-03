@@ -4,6 +4,9 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import HelpTip from "@/components/HelpTip";
+import HoujinSearch from "@/components/HoujinSearch";
+import type { HoujinResult } from "@/lib/houjin/lookup";
 import {
   relocationFormSchema,
   type RelocationForm,
@@ -27,14 +30,26 @@ type StepId =
   | "confirm";
 
 const stepTitles: Record<StepId, string> = {
-  type: "会社種別",
-  company: "会社基本情報",
-  move: "移転内容",
-  articles: "定款の記載",
-  decision: "意思決定情報",
-  shareholders: "株主リスト",
-  nondisclosure: "住所非表示措置",
-  confirm: "内容確認",
+  type: "会社の種類",
+  company: "会社の基本情報",
+  move: "引っ越しの内容",
+  articles: "定款（ていかん）の確認",
+  decision: "手続きの日付・提出先",
+  shareholders: "株主の一覧",
+  nondisclosure: "代表者住所の非表示",
+  confirm: "最終確認",
+};
+
+// 各ステップの一言ガイド（初心者向け）
+const stepDescriptions: Record<StepId, string> = {
+  type: "まずはあなたの会社が「株式会社」か「合同会社」かを選びましょう。",
+  company: "会社の名前や代表者の情報を入力します。法人番号で自動入力もできます。",
+  move: "どこからどこへ、いつ引っ越したか（する予定か）を入力します。",
+  articles: "会社のルールブック「定款」に本店の住所がどう書かれているかを確認します。",
+  decision: "登記を申請する法務局と、必要な会議の日付を入力します。",
+  shareholders: "定款を変える場合に必要な「株主リスト」を作成します。",
+  nondisclosure: "代表者の住所を登記簿で見えないようにする申し出（任意）です。",
+  confirm: "作成される書類と費用・提出先を確認して、書類を生成します。",
 };
 
 const stepFields: Record<StepId, (keyof RelocationForm)[]> = {
@@ -51,9 +66,11 @@ const stepFields: Record<StepId, (keyof RelocationForm)[]> = {
 export default function Wizard({
   relocationId,
   initialValues,
+  lookupEnabled = false,
 }: {
   relocationId: string;
   initialValues: RelocationForm;
+  lookupEnabled?: boolean;
 }) {
   const router = useRouter();
   const [stepIndex, setStepIndex] = useState(0);
@@ -64,7 +81,14 @@ export default function Wizard({
     defaultValues: initialValues,
     mode: "onTouched",
   });
-  const { register, watch, control, trigger, getValues, formState } = form;
+  const { register, watch, control, trigger, getValues, setValue, formState } = form;
+
+  function applyHoujin(r: HoujinResult) {
+    if (r.name) setValue("name", r.name, { shouldValidate: true });
+    if (r.address) setValue("old_address", r.address, { shouldValidate: true });
+    if (r.corporateNumber)
+      setValue("corporate_number", r.corporateNumber, { shouldValidate: true });
+  }
   const { fields, append, remove } = useFieldArray({ control, name: "shareholders" });
 
   const companyType = watch("company_type");
@@ -142,18 +166,18 @@ export default function Wizard({
   const tax = calcRegistrationTax(!!isCross);
 
   return (
-    <div className="mx-auto max-w-2xl px-6 py-10">
+    <div className="mx-auto max-w-2xl px-6 py-12">
       {/* プログレスバー */}
       <ol className="mb-8 flex flex-wrap gap-2 text-xs">
         {steps.map((s, i) => (
           <li
             key={s}
-            className={`rounded-full px-3 py-1 ${
+            className={`rounded-full px-3 py-1 font-medium transition ${
               i === stepIndex
-                ? "bg-blue-600 text-white"
+                ? "bg-brand-700 text-white"
                 : i < stepIndex
-                  ? "bg-blue-100 text-blue-700"
-                  : "bg-gray-100 text-gray-500"
+                  ? "bg-brand-50 text-brand-600"
+                  : "bg-canvas text-muted"
             }`}
           >
             {i + 1}. {stepTitles[s]}
@@ -161,90 +185,171 @@ export default function Wizard({
         ))}
       </ol>
 
-      <h2 className="text-xl font-bold">{stepTitles[currentStep]}</h2>
+      <div className="rounded-2xl border border-line bg-surface p-7 shadow-sm">
+        <p className="text-xs font-medium text-brand-500">
+          ステップ {stepIndex + 1} / {steps.length}
+        </p>
+        <h2 className="mt-1 font-serif text-2xl font-bold tracking-tight text-ink">
+          {stepTitles[currentStep]}
+        </h2>
+        <p className="mt-2 text-sm leading-relaxed text-muted">
+          {stepDescriptions[currentStep]}
+        </p>
 
       <div className="mt-6 space-y-5">
         {currentStep === "type" && (
-          <Field label="会社種別" error={formState.errors.company_type?.message}>
-            <select {...register("company_type")} className={inputCls}>
-              <option value="kk">株式会社</option>
-              <option value="llc">合同会社</option>
-            </select>
-          </Field>
+          <>
+            <div className="rounded-xl border border-line bg-canvas/60 p-4">
+              <p className="text-sm font-medium text-ink">📋 始める前に用意すると安心なもの</p>
+              <ul className="mt-2 space-y-1.5 text-sm text-muted">
+                <li>・登記事項証明書（登記簿謄本）または定款 … 会社名・住所・代表者の確認に</li>
+                <li>・新しい本店の住所（建物名・部屋番号まで）</li>
+                <li>・実際に引っ越した（する）日</li>
+              </ul>
+              <p className="mt-2 text-xs text-muted">
+                手元になくても、わかる範囲で進めて後から修正できます。
+              </p>
+            </div>
+            <Field
+              label="会社の種類"
+              help="登記事項証明書の冒頭や、会社名（「株式会社」「合同会社」）で分かります。一般的な会社は「株式会社」です。"
+              error={formState.errors.company_type?.message}
+            >
+              <select {...register("company_type")} className={inputCls}>
+                <option value="kk">株式会社</option>
+                <option value="llc">合同会社（LLC）</option>
+              </select>
+            </Field>
+          </>
         )}
 
         {currentStep === "company" && (
           <>
-            <Field label="商号" error={formState.errors.name?.message}>
-              <input {...register("name")} className={inputCls} placeholder="株式会社○○" />
+            {lookupEnabled && <HoujinSearch onSelect={applyHoujin} />}
+            <Field
+              label="会社名（商号）"
+              help="登記されている正式名称です。「株式会社」「合同会社」の位置（前か後か）も登記どおりに入力してください。"
+              error={formState.errors.name?.message}
+            >
+              <input {...register("name")} className={inputCls} placeholder="例: 株式会社サンプル商事" />
             </Field>
             <Field
               label="会社法人等番号（任意・12桁）"
+              help="登記事項証明書の右上などに記載された12桁の番号です。分からなければ空欄のままで大丈夫です。（13桁の「法人番号」とは別物です）"
               error={formState.errors.corporate_number?.message}
             >
-              <input {...register("corporate_number")} className={inputCls} placeholder="0000-00-000000 の数字12桁" />
+              <input {...register("corporate_number")} className={inputCls} placeholder="例: 0000-00-000000 の数字12桁" />
             </Field>
             {companyType === "kk" && (
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" {...register("has_board")} />
-                取締役会設置会社である
+              <label className="flex items-start gap-2.5 rounded-lg border border-line p-3.5 text-sm text-ink">
+                <input type="checkbox" {...register("has_board")} className="mt-0.5 accent-brand-700" />
+                <span>
+                  取締役会を設置している
+                  <HelpTip>
+                    取締役が3名以上いて「取締役会」という会議体を置いている会社です。登記簿に「取締役会設置会社」と記載があれば該当します。多くの小規模な会社は設置していません。
+                  </HelpTip>
+                </span>
               </label>
             )}
-            <Field label="代表者の資格" error={formState.errors.rep_title?.message}>
+            <Field
+              label="代表者の肩書き"
+              help={companyType === "llc" ? "合同会社では通常「代表社員」です。" : "株式会社では通常「代表取締役」です。"}
+              error={formState.errors.rep_title?.message}
+            >
               <input
                 {...register("rep_title")}
                 className={inputCls}
-                placeholder={companyType === "llc" ? "代表社員" : "代表取締役"}
+                placeholder={companyType === "llc" ? "例: 代表社員" : "例: 代表取締役"}
               />
             </Field>
-            <Field label="代表者氏名" error={formState.errors.rep_name?.message}>
-              <input {...register("rep_name")} className={inputCls} />
+            <Field label="代表者の氏名" error={formState.errors.rep_name?.message}>
+              <input {...register("rep_name")} className={inputCls} placeholder="例: 山田 太郎" />
             </Field>
-            <Field label="代表者住所" error={formState.errors.rep_address?.message}>
-              <input {...register("rep_address")} className={inputCls} />
+            <Field
+              label="代表者の住所"
+              help="登記されている代表者個人の住所です。住民票どおりの表記で入力してください。"
+              error={formState.errors.rep_address?.message}
+            >
+              <input {...register("rep_address")} className={inputCls} placeholder="例: 東京都千代田区○○一丁目1番1号" />
             </Field>
           </>
         )}
 
         {currentStep === "move" && (
           <>
-            <Field label="移転前の本店所在地（地番まで）" error={formState.errors.old_address?.message}>
-              <input {...register("old_address")} className={inputCls} />
+            <Field
+              label="引っ越し前の本店住所"
+              help="今、登記されている本店の住所です。「○番地○」や「○番○号」まで、登記どおりに入力してください。"
+              error={formState.errors.old_address?.message}
+            >
+              <input {...register("old_address")} className={inputCls} placeholder="例: 東京都千代田区○○一丁目1番1号" />
             </Field>
-            <Field label="移転後の本店所在地（地番まで）" error={formState.errors.new_address?.message}>
-              <input {...register("new_address")} className={inputCls} />
+            <Field
+              label="引っ越し後の本店住所"
+              help="新しい本店の住所です。ビル名・部屋番号は登記に含めるかどうか会社の方針によります。基本は番地まで入れておけば問題ありません。"
+              error={formState.errors.new_address?.message}
+            >
+              <input {...register("new_address")} className={inputCls} placeholder="例: 東京都港区△△二丁目2番2号" />
             </Field>
-            <Field label="移転日（実際に移転した日）" error={formState.errors.transfer_date?.message}>
+            <Field
+              label="引っ越した日（移転日）"
+              help="実際に本店を移した日を選びます。これから移す場合はその予定日。登記の申請はこの日以降にできます。"
+              error={formState.errors.transfer_date?.message}
+            >
               <input type="date" {...register("transfer_date")} className={inputCls} />
             </Field>
-            <label className="flex items-start gap-2 text-sm">
-              <input type="checkbox" {...register("is_cross_jurisdiction")} className="mt-1" />
-              <span>
-                移転先は現在の本店とは<strong>別の法務局（登記所）の管轄</strong>である（管轄外移転）
-              </span>
-            </label>
+            <div className="rounded-xl border border-line bg-canvas/60 p-4">
+              <label className="flex items-start gap-2.5 text-sm text-ink">
+                <input type="checkbox" {...register("is_cross_jurisdiction")} className="mt-0.5 accent-brand-700" />
+                <span>
+                  引っ越し先は、今までと<strong>別の法務局の管轄</strong>だ（管轄外への引っ越し）
+                  <HelpTip>
+                    住所を管轄する法務局（登記所）が変わるかどうか、という意味です。市区町村が変わると別管轄になることが多いですが、同じ市内でも分かれる場合があります。分からないときは、法務局の「管轄のご案内」で新旧それぞれの住所の管轄を調べられます。
+                  </HelpTip>
+                </span>
+              </label>
+              <p className="mt-2 text-xs leading-relaxed text-muted">
+                管轄が変わると手続き（経由申請）や費用が変わります。分からない場合は、
+                <a
+                  href="https://houkyoku.moj.go.jp/homu/static"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-medium text-brand-600 hover:underline"
+                >
+                  法務局の管轄案内
+                </a>
+                で新旧の住所を確認してください。
+              </p>
+            </div>
           </>
         )}
 
         {currentStep === "articles" && (
           <>
-            <Field label="定款の本店所在地の記載" error={formState.errors.articles_granularity?.message}>
+            <p className="rounded-lg bg-brand-50 p-4 text-sm leading-relaxed text-brand-800">
+              「定款（ていかん）」は会社のルールブックです。その中の本店の住所が、どのくらい詳しく書かれているかで、手続きの内容が変わります。お手元の定款の本店に関する条文をご確認ください。
+            </p>
+            <Field
+              label="定款に書かれている本店の住所は？"
+              help="「当会社は本店を○○市に置く」のように市区町村までなら上、「○○市○○町1番地」のように番地まで書いてあれば下を選びます。"
+              error={formState.errors.articles_granularity?.message}
+            >
               <select {...register("articles_granularity")} className={inputCls}>
-                <option value="municipality">最小行政区画（市区町村）まで</option>
-                <option value="chiban">地番まで記載している</option>
+                <option value="municipality">市区町村まで（例：本店を東京都港区に置く）</option>
+                <option value="chiban">番地まで（例：本店を東京都港区△△2番2号に置く）</option>
               </select>
             </Field>
             {articlesGranularity === "municipality" && (
-              <label className="flex items-start gap-2 text-sm">
-                <input type="checkbox" {...register("same_municipality")} className="mt-1" />
-                <span>移転先は定款に記載された市区町村と同一である</span>
+              <label className="flex items-start gap-2.5 rounded-lg border border-line p-3.5 text-sm text-ink">
+                <input type="checkbox" {...register("same_municipality")} className="mt-0.5 accent-brand-700" />
+                <span>引っ越し先は、定款に書かれている市区町村と同じだ</span>
               </label>
             )}
             <div
-              className={`rounded-md p-4 text-sm ${
+              className={`rounded-lg p-4 text-sm leading-relaxed ${
                 requiresAmendment
-                  ? "bg-orange-50 text-orange-800"
-                  : "bg-green-50 text-green-800"
+                  ? "bg-warning-soft text-warning"
+                  : "bg-success-soft text-success"
               }`}
             >
               {requiresAmendment ? (
@@ -266,20 +371,30 @@ export default function Wizard({
 
         {currentStep === "decision" && (
           <>
-            <Field label="旧本店管轄の登記所名" error={formState.errors.old_registry_office?.message}>
-              <input {...register("old_registry_office")} className={inputCls} placeholder="○○法務局○○支局 など" />
+            <Field
+              label="引っ越し前の住所を管轄する法務局"
+              help="申請書を出す先の法務局（登記所）の名前です。「○○法務局」「○○法務局△△支局」のように入力します。法務局の管轄案内で調べられます。"
+              error={formState.errors.old_registry_office?.message}
+            >
+              <input {...register("old_registry_office")} className={inputCls} placeholder="例: 東京法務局○○出張所" />
             </Field>
             {isCross && (
               <Field
-                label="新本店管轄の登記所名"
+                label="引っ越し後の住所を管轄する法務局"
+                help="管轄が変わるため、新しい住所を管轄する法務局名も必要です。"
                 error={formState.errors.new_registry_office?.message}
               >
-                <input {...register("new_registry_office")} className={inputCls} />
+                <input {...register("new_registry_office")} className={inputCls} placeholder="例: 東京法務局△△出張所" />
               </Field>
             )}
             {requiresAmendment && (
               <Field
-                label={companyType === "kk" ? "株主総会の日付" : "総社員の同意の日付"}
+                label={companyType === "kk" ? "株主総会を開いた日" : "社員全員が同意した日"}
+                help={
+                  companyType === "kk"
+                    ? "定款を変えるために株主総会で決議した日です。これから行う場合は予定日でも構いません。"
+                    : "定款を変えることに社員全員が同意した日です。"
+                }
                 error={formState.errors.meeting_date?.message}
               >
                 <input type="date" {...register("meeting_date")} className={inputCls} />
@@ -290,17 +405,17 @@ export default function Wizard({
 
         {currentStep === "shareholders" && (
           <>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm leading-relaxed text-muted">
               議決権割合の多い順に、合計が2/3に達するまで、または上位10名までのいずれか少ない方を入力してください（同順位は全員）。
             </p>
             {fields.map((f, i) => (
-              <div key={f.id} className="rounded-md border border-gray-200 p-4">
+              <div key={f.id} className="rounded-lg border border-line p-4">
                 <div className="mb-2 flex items-center justify-between">
                   <span className="text-sm font-medium">株主 {i + 1}</span>
                   <button
                     type="button"
                     onClick={() => remove(i)}
-                    className="text-xs text-red-600 hover:underline"
+                    className="text-xs font-medium text-red-600 hover:underline"
                   >
                     削除
                   </button>
@@ -326,7 +441,7 @@ export default function Wizard({
             <button
               type="button"
               onClick={() => append({ name: "", address: "", shares: 0, voting_rights: 0 })}
-              className="rounded-md border border-blue-600 px-3 py-1.5 text-sm text-blue-700 hover:bg-blue-50"
+              className="rounded-lg border border-line bg-surface px-3.5 py-2 text-sm font-medium text-ink transition hover:border-brand-300 hover:bg-brand-50"
             >
               ＋ 株主を追加
             </button>
@@ -338,13 +453,16 @@ export default function Wizard({
 
         {currentStep === "nondisclosure" && (
           <>
-            <label className="flex items-start gap-2 text-sm">
-              <input type="checkbox" {...register("apply_address_nondisclosure")} className="mt-1" />
+            <label className="flex items-start gap-2.5 rounded-lg border border-line p-3.5 text-sm text-ink">
+              <input type="checkbox" {...register("apply_address_nondisclosure")} className="mt-0.5 accent-brand-700" />
               <span>
-                代表取締役等住所非表示措置を申し出る（管轄外移転時のみ・新所在地の登記と同時に申出可能）
+                代表者の住所を登記簿で見えないようにする申し出をする（任意）
+                <HelpTip>
+                  登記簿に載る代表取締役などの住所を、一部だけの表示にできる制度です。プライバシー保護のための任意の手続きで、必須ではありません。今回の引っ越し（管轄外）の登記と同時に申し出ることができます。
+                </HelpTip>
               </span>
             </label>
-            <div className="rounded-md bg-blue-50 p-4 text-sm text-blue-900">
+            <div className="rounded-lg bg-brand-50 p-4 text-sm leading-relaxed text-brand-800">
               申し出る場合、<strong>実在性を証する書面</strong>の添付が必要です（上場会社で措置済み等を除く）。
               新本店管轄分の申請書に、希望する旨・対象者の資格／氏名／住所・添付書面を記載します。
             </div>
@@ -353,39 +471,40 @@ export default function Wizard({
 
         {currentStep === "confirm" && (
           <div className="space-y-4">
-            <div className="rounded-md border border-gray-200 p-4">
-              <h3 className="font-semibold">生成される書類</h3>
-              <ul className="mt-2 list-disc pl-5 text-sm text-gray-700">
+            <div className="rounded-lg border border-line p-4">
+              <h3 className="font-semibold text-ink">生成される書類</h3>
+              <ul className="mt-2 list-disc pl-5 text-sm text-muted">
                 {docs.map((d) => (
                   <li key={d}>{DOC_TYPE_LABELS[d]}</li>
                 ))}
               </ul>
             </div>
-            <div className="rounded-md border border-gray-200 p-4 text-sm">
-              <h3 className="font-semibold">登録免許税</h3>
-              <p className="mt-1 text-lg font-bold">
+            <div className="rounded-lg border border-line p-4 text-sm">
+              <h3 className="font-semibold text-ink">登録免許税</h3>
+              <p className="mt-1 font-serif text-2xl font-bold text-ink">
                 {tax.toLocaleString()}円
-                <span className="ml-2 text-xs font-normal text-gray-500">
+                <span className="ml-2 text-xs font-normal text-muted">
                   {isCross ? "（旧分3万円＋新分3万円）" : "（管轄内）"}
                 </span>
               </p>
             </div>
-            <div className="rounded-md border border-gray-200 bg-gray-50 p-4 text-sm">
-              <h3 className="font-semibold">登記すべき事項（プレビュー）</h3>
-              <pre className="mt-2 whitespace-pre-wrap font-sans text-gray-800">
+            <div className="rounded-lg border border-line bg-canvas p-4 text-sm">
+              <h3 className="font-semibold text-ink">登記すべき事項（プレビュー）</h3>
+              <pre className="mt-2 whitespace-pre-wrap font-sans text-ink">
                 {buildRegistrationMatters({
                   transferDate: values.transfer_date,
                   newAddress: values.new_address,
                 })}
               </pre>
             </div>
-            <div className="rounded-md border border-gray-200 p-4 text-sm text-gray-600">
-              提出先: <strong>{values.old_registry_office || "（旧本店管轄の登記所）"}</strong> に
+            <div className="rounded-lg border border-line p-4 text-sm text-muted">
+              提出先: <strong className="text-ink">{values.old_registry_office || "（旧本店管轄の登記所）"}</strong> に
               {isCross ? "旧分・新分をまとめて提出（経由申請）" : "提出"}。
               移転日から<strong>2週間以内</strong>に申請してください。
             </div>
           </div>
         )}
+      </div>
       </div>
 
       {/* ナビゲーション */}
@@ -394,16 +513,16 @@ export default function Wizard({
           type="button"
           onClick={back}
           disabled={stepIndex === 0}
-          className="rounded-md border border-gray-300 px-4 py-2 text-sm disabled:opacity-40"
+          className="rounded-lg border border-line bg-surface px-4 py-2 text-sm font-medium text-ink transition hover:border-brand-300 hover:bg-brand-50 disabled:opacity-40"
         >
           ← 戻る
         </button>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <button
             type="button"
             onClick={save}
             disabled={saving}
-            className="text-sm text-gray-500 hover:underline disabled:opacity-50"
+            className="text-sm text-muted transition hover:text-ink hover:underline disabled:opacity-50"
           >
             {saving ? "保存中..." : "下書き保存"}
           </button>
@@ -412,7 +531,7 @@ export default function Wizard({
               type="button"
               onClick={generate}
               disabled={saving}
-              className="rounded-md bg-green-600 px-5 py-2 font-medium text-white hover:bg-green-700 disabled:opacity-50"
+              className="rounded-lg bg-brand-700 px-5 py-2.5 font-medium text-white shadow-sm transition hover:bg-brand-800 disabled:opacity-50"
             >
               書類を生成する
             </button>
@@ -420,7 +539,7 @@ export default function Wizard({
             <button
               type="button"
               onClick={next}
-              className="rounded-md bg-blue-600 px-5 py-2 font-medium text-white hover:bg-blue-700"
+              className="rounded-lg bg-brand-700 px-5 py-2.5 font-medium text-white shadow-sm transition hover:bg-brand-800"
             >
               次へ →
             </button>
@@ -432,20 +551,25 @@ export default function Wizard({
 }
 
 const inputCls =
-  "mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none";
+  "mt-1.5 w-full rounded-lg border border-line bg-surface px-3.5 py-2.5 text-sm text-ink placeholder:text-muted/60 transition focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100";
 
 function Field({
   label,
+  help,
   error,
   children,
 }: {
   label: string;
+  help?: string;
   error?: string;
   children: React.ReactNode;
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700">{label}</label>
+      <label className="block text-sm font-medium text-ink">
+        {label}
+        {help && <HelpTip>{help}</HelpTip>}
+      </label>
       {children}
       {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
     </div>

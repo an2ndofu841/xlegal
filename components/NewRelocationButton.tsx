@@ -28,27 +28,27 @@ export default function NewRelocationButton() {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="rounded-md bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"
+        className="inline-flex items-center gap-1.5 rounded-lg bg-brand-700 px-4 py-2.5 font-medium text-white shadow-sm transition hover:bg-brand-800"
       >
-        ＋ 新しい移転案件を作成
+        <span className="text-lg leading-none">＋</span> 新しい移転案件を作成
       </button>
     );
   }
 
   return (
-    <div className="flex items-center gap-3">
-      <span className="text-sm text-gray-600">会社種別を選択:</span>
+    <div className="flex flex-wrap items-center gap-2.5">
+      <span className="text-sm text-muted">会社種別を選択:</span>
       <button
         disabled={loading}
         onClick={() => create("kk")}
-        className="rounded-md border border-blue-600 px-4 py-2 font-medium text-blue-700 hover:bg-blue-50 disabled:opacity-50"
+        className="rounded-lg border border-line bg-surface px-4 py-2 font-medium text-ink transition hover:border-brand-300 hover:bg-brand-50 disabled:opacity-50"
       >
         株式会社
       </button>
       <button
         disabled={loading}
         onClick={() => create("llc")}
-        className="rounded-md border border-blue-600 px-4 py-2 font-medium text-blue-700 hover:bg-blue-50 disabled:opacity-50"
+        className="rounded-lg border border-line bg-surface px-4 py-2 font-medium text-ink transition hover:border-brand-300 hover:bg-brand-50 disabled:opacity-50"
       >
         合同会社
       </button>

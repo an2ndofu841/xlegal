@@ -12,7 +12,7 @@ export default function CopyButton({ text }: { text: string }) {
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       }}
-      className="rounded-md border border-blue-600 px-3 py-1.5 text-sm text-blue-700 hover:bg-blue-50"
+      className="rounded-lg border border-line bg-surface px-3.5 py-2 text-sm font-medium text-ink transition hover:border-brand-300 hover:bg-brand-50"
     >
       {copied ? "コピーしました" : "登記すべき事項をコピー"}
     </button>

@@ -1,7 +1,14 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Disclaimer from "@/components/Disclaimer";
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "本店移転らくらく登記 | 書類作成支援",
@@ -15,8 +22,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ja" className="h-full antialiased">
-      <body className="flex min-h-full flex-col bg-gray-50 text-gray-900">
+    <html lang="ja" className={`${inter.variable} h-full`}>
+      <body className="flex min-h-full flex-col font-sans">
         <Header />
         <main className="flex-1">{children}</main>
         <Disclaimer />

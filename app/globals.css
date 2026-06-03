@@ -1,26 +1,54 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  /* タイポグラフィ */
+  --font-sans:
+    var(--font-inter), "Hiragino Kaku Gothic ProN", "Hiragino Sans",
+    "Noto Sans JP", "Yu Gothic", Meiryo, sans-serif;
+  --font-serif:
+    "Hiragino Mincho ProN", "Yu Mincho", YuMincho, "Noto Serif JP", serif;
+
+  /* ニュートラル */
+  --color-canvas: #f6f5f2;
+  --color-surface: #ffffff;
+  --color-ink: #1c2434;
+  --color-muted: #5c6373;
+  --color-line: #e8e5dd;
+
+  /* ブランド（ディープネイビー） */
+  --color-brand-50: #eef1f6;
+  --color-brand-100: #dbe1ec;
+  --color-brand-200: #b9c4d8;
+  --color-brand-300: #8f9fbd;
+  --color-brand-400: #5f739a;
+  --color-brand-500: #3d5183;
+  --color-brand-600: #2b3b5c;
+  --color-brand-700: #213049;
+  --color-brand-800: #1a2638;
+  --color-brand-900: #131b29;
+
+  /* アクセント（ブラスゴールド） */
+  --color-accent: #b08d57;
+  --color-accent-soft: #f4eee2;
+
+  /* ステータス */
+  --color-success: #1f7a54;
+  --color-success-soft: #eaf5ef;
+  --color-warning: #9a6b2f;
+  --color-warning-soft: #fbf2e4;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
-}
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  ::selection {
+    background-color: var(--color-brand-100);
+    color: var(--color-brand-800);
+  }
 }

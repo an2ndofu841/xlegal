@@ -7,6 +7,9 @@ import { createClient } from "@/lib/supabase/client";
 
 type Mode = "login" | "signup";
 
+const inputCls =
+  "mt-1.5 w-full rounded-lg border border-line bg-surface px-3.5 py-2.5 text-sm text-ink placeholder:text-muted/60 transition focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100";
+
 function AuthForm() {
   const params = useSearchParams();
   const redirect = params.get("redirect") ?? "/dashboard";
@@ -47,7 +50,6 @@ function AuthForm() {
         );
         return;
       }
-      // セッション Cookie を SSR 側に確実に反映させるためフルリロードで遷移。
       window.location.assign(redirect);
     } else {
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin;
@@ -63,7 +65,6 @@ function AuthForm() {
         setMessage(error.message);
         return;
       }
-      // メール確認が有効な場合は session が null。無効ならそのままログイン状態。
       if (data.session) {
         window.location.assign(redirect);
       } else {
@@ -72,126 +73,155 @@ function AuthForm() {
     }
   }
 
-  if (status === "confirm") {
-    return (
-      <div className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center px-6">
-        <h1 className="text-2xl font-bold">確認メールを送信しました</h1>
-        <div className="mt-6 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-800">
-          <strong>{email}</strong> に確認メールを送信しました。メール内のリンクを
-          <strong>同じブラウザ</strong>で開くと登録が完了します。
-        </div>
-        <button
-          type="button"
-          onClick={() => switchMode("login")}
-          className="mt-6 text-sm text-blue-600 hover:underline"
-        >
-          ログイン画面に戻る
-        </button>
-      </div>
-    );
-  }
-
   return (
-    <div className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center px-6">
-      <h1 className="text-2xl font-bold">
-        {mode === "login" ? "ログイン" : "新規登録"}
-      </h1>
+    <div className="mx-auto flex min-h-[calc(100vh-8rem)] max-w-md flex-col justify-center px-6 py-12">
+      <div className="rounded-2xl border border-line bg-surface p-8 shadow-sm">
+        {status === "confirm" ? (
+          <div className="text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-success-soft text-success">
+              <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6">
+                <path
+                  d="M3 8l9 6 9-6M5 5h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+            <h1 className="mt-5 font-serif text-2xl font-bold text-ink">
+              確認メールを送信しました
+            </h1>
+            <p className="mt-3 text-sm leading-relaxed text-muted">
+              <strong className="text-ink">{email}</strong> 宛に確認メールをお送りしました。
+              メール内のリンクを<strong className="text-ink">同じブラウザ</strong>
+              で開くと登録が完了します。
+            </p>
+            <button
+              type="button"
+              onClick={() => switchMode("login")}
+              className="mt-6 text-sm font-medium text-brand-600 hover:underline"
+            >
+              ログイン画面に戻る
+            </button>
+          </div>
+        ) : (
+          <>
+            <h1 className="font-serif text-2xl font-bold tracking-tight text-ink">
+              {mode === "login" ? "おかえりなさい" : "アカウント作成"}
+            </h1>
+            <p className="mt-1.5 text-sm text-muted">
+              {mode === "login"
+                ? "メールアドレスとパスワードでログイン"
+                : "メールアドレスとパスワードで無料登録"}
+            </p>
 
-      {/* タブ切替 */}
-      <div className="mt-6 grid grid-cols-2 rounded-lg border border-gray-200 p-1 text-sm">
-        <button
-          type="button"
-          onClick={() => switchMode("login")}
-          className={`rounded-md py-2 font-medium transition ${
-            mode === "login" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-50"
-          }`}
-        >
-          ログイン
-        </button>
-        <button
-          type="button"
-          onClick={() => switchMode("signup")}
-          className={`rounded-md py-2 font-medium transition ${
-            mode === "signup" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-50"
-          }`}
-        >
-          新規登録
-        </button>
+            {/* タブ切替 */}
+            <div className="mt-6 grid grid-cols-2 gap-1 rounded-xl bg-canvas p-1 text-sm">
+              <button
+                type="button"
+                onClick={() => switchMode("login")}
+                className={`rounded-lg py-2 font-medium transition ${
+                  mode === "login"
+                    ? "bg-surface text-ink shadow-sm"
+                    : "text-muted hover:text-ink"
+                }`}
+              >
+                ログイン
+              </button>
+              <button
+                type="button"
+                onClick={() => switchMode("signup")}
+                className={`rounded-lg py-2 font-medium transition ${
+                  mode === "signup"
+                    ? "bg-surface text-ink shadow-sm"
+                    : "text-muted hover:text-ink"
+                }`}
+              >
+                新規登録
+              </button>
+            </div>
+
+            <form onSubmit={onSubmit} className="mt-6 space-y-4">
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-ink">
+                  メールアドレス
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  required
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className={inputCls}
+                  placeholder="you@example.com"
+                />
+              </div>
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-ink">
+                  パスワード
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  required
+                  minLength={6}
+                  autoComplete={mode === "login" ? "current-password" : "new-password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className={inputCls}
+                  placeholder={mode === "signup" ? "6文字以上" : "パスワード"}
+                />
+              </div>
+
+              {status === "error" && (
+                <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+                  {message}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                disabled={status === "submitting"}
+                className="w-full rounded-lg bg-brand-700 px-4 py-2.5 font-medium text-white shadow-sm transition hover:bg-brand-800 disabled:opacity-50"
+              >
+                {status === "submitting"
+                  ? "処理中..."
+                  : mode === "login"
+                    ? "ログイン"
+                    : "登録する"}
+              </button>
+            </form>
+
+            {mode === "login" ? (
+              <div className="mt-5 flex items-center justify-between text-sm">
+                <button
+                  type="button"
+                  onClick={() => switchMode("signup")}
+                  className="font-medium text-brand-600 hover:underline"
+                >
+                  アカウントを作成
+                </button>
+                <Link href="/reset-password" className="text-muted hover:text-ink hover:underline">
+                  パスワードをお忘れの方
+                </Link>
+              </div>
+            ) : (
+              <p className="mt-5 text-center text-sm text-muted">
+                すでにアカウントをお持ちの方は{" "}
+                <button
+                  type="button"
+                  onClick={() => switchMode("login")}
+                  className="font-medium text-brand-600 hover:underline"
+                >
+                  ログイン
+                </button>
+              </p>
+            )}
+          </>
+        )}
       </div>
-
-      <form onSubmit={onSubmit} className="mt-6 space-y-4">
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium">
-            メールアドレス
-          </label>
-          <input
-            id="email"
-            type="email"
-            required
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2"
-            placeholder="you@example.com"
-          />
-        </div>
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium">
-            パスワード
-          </label>
-          <input
-            id="password"
-            type="password"
-            required
-            minLength={6}
-            autoComplete={mode === "login" ? "current-password" : "new-password"}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2"
-            placeholder={mode === "signup" ? "6文字以上" : "パスワード"}
-          />
-        </div>
-
-        {status === "error" && <p className="text-sm text-red-600">{message}</p>}
-
-        <button
-          type="submit"
-          disabled={status === "submitting"}
-          className="w-full rounded-md bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-        >
-          {status === "submitting"
-            ? "処理中..."
-            : mode === "login"
-              ? "ログイン"
-              : "登録する"}
-        </button>
-      </form>
-
-      {mode === "login" ? (
-        <div className="mt-4 flex items-center justify-between text-sm">
-          <button
-            type="button"
-            onClick={() => switchMode("signup")}
-            className="text-blue-600 hover:underline"
-          >
-            アカウントをお持ちでない方
-          </button>
-          <Link href="/reset-password" className="text-gray-500 hover:underline">
-            パスワードをお忘れの方
-          </Link>
-        </div>
-      ) : (
-        <p className="mt-4 text-sm text-gray-600">
-          すでにアカウントをお持ちの方は{" "}
-          <button
-            type="button"
-            onClick={() => switchMode("login")}
-            className="text-blue-600 hover:underline"
-          >
-            ログイン
-          </button>
-        </p>
-      )}
     </div>
   );
 }

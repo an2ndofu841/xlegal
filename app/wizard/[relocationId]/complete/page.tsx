@@ -49,35 +49,51 @@ export default async function CompletePage({
   const mattersText = registrationMattersText(reloc);
 
   return (
-    <div className="mx-auto max-w-3xl px-6 py-10">
-      <div className="rounded-lg border border-green-200 bg-green-50 p-5">
-        <h1 className="text-xl font-bold text-green-900">書類の生成が完了しました</h1>
-        <p className="mt-1 text-sm text-green-800">
-          下記より .docx をダウンロードできます。必要に応じて編集してご利用ください。
-        </p>
+    <div className="mx-auto max-w-3xl px-6 py-12">
+      <div className="flex items-start gap-4 rounded-2xl border border-success/20 bg-success-soft p-6">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-success text-white">
+          <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
+            <path
+              fillRule="evenodd"
+              d="M16.7 5.3a1 1 0 010 1.4l-7.5 7.5a1 1 0 01-1.4 0L3.3 9.7a1 1 0 011.4-1.4l3.1 3.1 6.8-6.8a1 1 0 011.4 0z"
+              clipRule="evenodd"
+            />
+          </svg>
+        </span>
+        <div>
+          <h1 className="font-serif text-2xl font-bold text-ink">書類の生成が完了しました</h1>
+          <p className="mt-1 text-sm leading-relaxed text-success">
+            下記より .docx をダウンロードできます。必要に応じて編集してご利用ください。
+          </p>
+        </div>
       </div>
 
       {/* ダウンロード */}
-      <section className="mt-8">
+      <section className="mt-10">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">書類のダウンロード</h2>
+          <h2 className="text-lg font-semibold text-ink">書類のダウンロード</h2>
           <a
             href={`/api/relocations/${relocationId}/download`}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            className="rounded-lg bg-brand-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-brand-800"
           >
             すべてZIPでダウンロード
           </a>
         </div>
-        <ul className="mt-4 divide-y divide-gray-200 rounded-lg border border-gray-200 bg-white">
-          {signed.map((d) => (
-            <li key={d.docType} className="flex items-center justify-between px-5 py-3">
-              <span className="text-sm">{d.label}</span>
+        <ul className="mt-4 overflow-hidden rounded-2xl border border-line bg-surface shadow-sm">
+          {signed.map((d, idx) => (
+            <li
+              key={d.docType}
+              className={`flex items-center justify-between px-5 py-3.5 ${
+                idx !== 0 ? "border-t border-line" : ""
+              }`}
+            >
+              <span className="text-sm text-ink">{d.label}</span>
               {d.url ? (
-                <a href={d.url} className="text-sm font-medium text-blue-600 hover:underline">
+                <a href={d.url} className="text-sm font-medium text-brand-600 hover:underline">
                   ダウンロード
                 </a>
               ) : (
-                <span className="text-sm text-gray-400">URL取得失敗</span>
+                <span className="text-sm text-muted/60">URL取得失敗</span>
               )}
             </li>
           ))}
@@ -85,23 +101,23 @@ export default async function CompletePage({
       </section>
 
       {/* 登記すべき事項（コピペ用） */}
-      <section className="mt-8">
+      <section className="mt-10">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">登記すべき事項（コピペ用）</h2>
+          <h2 className="text-lg font-semibold text-ink">登記すべき事項（コピペ用）</h2>
           <CopyButton text={mattersText} />
         </div>
-        <pre className="mt-3 whitespace-pre-wrap rounded-md border border-gray-200 bg-gray-50 p-4 font-sans text-sm">
+        <pre className="mt-3 whitespace-pre-wrap rounded-2xl border border-line bg-canvas p-4 font-sans text-sm text-ink">
           {mattersText}
         </pre>
-        <p className="mt-1 text-xs text-gray-500">
+        <p className="mt-2 text-xs text-muted">
           オンライン申請・QRコード（二次元コード）申請の際は、この文言をそのまま貼り付けられます。
         </p>
       </section>
 
       {/* 提出方法ガイド */}
-      <section className="mt-8 rounded-lg border border-gray-200 bg-white p-5">
-        <h2 className="text-lg font-semibold">提出方法と注意事項</h2>
-        <ul className="mt-3 space-y-3 text-sm text-gray-700">
+      <section className="mt-10 rounded-2xl border border-line bg-surface p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-ink">提出方法と注意事項</h2>
+        <ul className="mt-3 space-y-3 text-sm leading-relaxed text-muted [&_strong]:font-semibold [&_strong]:text-ink">
           <li>
             <strong>登録免許税:</strong> {tax.toLocaleString()}円
             {reloc.is_cross_jurisdiction ? "（旧分3万円＋新分3万円）" : "（管轄内3万円）"}
@@ -137,8 +153,8 @@ export default async function CompletePage({
         </ul>
       </section>
 
-      <div className="mt-8">
-        <Link href="/dashboard" className="text-sm text-blue-600 hover:underline">
+      <div className="mt-10">
+        <Link href="/dashboard" className="text-sm font-medium text-brand-600 hover:underline">
           ← マイページに戻る
         </Link>
       </div>
