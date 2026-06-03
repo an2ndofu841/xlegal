@@ -56,7 +56,7 @@ const stepFields: Record<StepId, (keyof RelocationForm)[]> = {
   type: ["company_type"],
   company: ["name", "corporate_number", "has_board", "rep_title", "rep_name", "rep_address"],
   move: ["old_address", "new_address", "transfer_date", "is_cross_jurisdiction"],
-  articles: ["articles_granularity", "same_municipality"],
+  articles: ["articles_granularity", "same_municipality", "articles_clause_number"],
   decision: ["old_registry_office", "new_registry_office", "meeting_date"],
   shareholders: ["shareholders"],
   nondisclosure: ["apply_address_nondisclosure"],
@@ -366,6 +366,25 @@ export default function Wizard({
                 </>
               )}
             </div>
+            {requiresAmendment && companyType === "kk" && (
+              <Field
+                label="定款で本店を定めている条番号"
+                help="株主総会議事録に「定款第○条を変更し…」と記載するための番号です。多くの会社では第3条のため、初期値を3にしています。お手元の定款で本店を定めている条番号が違う場合は変更してください。"
+                error={formState.errors.articles_clause_number?.message}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted">定款第</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={99}
+                    {...register("articles_clause_number", { valueAsNumber: true })}
+                    className={`${inputCls} w-24`}
+                  />
+                  <span className="text-sm text-muted">条</span>
+                </div>
+              </Field>
+            )}
           </>
         )}
 

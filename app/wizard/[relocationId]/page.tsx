@@ -57,6 +57,7 @@ export default async function WizardPage({
     is_cross_jurisdiction: relocation.is_cross_jurisdiction ?? false,
     articles_granularity: "municipality",
     same_municipality: !requires,
+    articles_clause_number: relocation.articles_clause_number ?? 3,
     meeting_date: relocation.meeting_date ?? "",
     old_registry_office: relocation.old_registry_office ?? "",
     new_registry_office: relocation.new_registry_office ?? "",

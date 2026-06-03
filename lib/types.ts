@@ -34,6 +34,7 @@ export interface Relocation {
   transfer_date: string;
   is_cross_jurisdiction: boolean;
   requires_articles_amendment: boolean;
+  articles_clause_number: number;
   meeting_date: string | null;
   old_registry_office: string;
   new_registry_office: string | null;

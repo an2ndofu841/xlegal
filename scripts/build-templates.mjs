@@ -264,7 +264,7 @@ const templates = {
       spacer(),
       p("第１号議案　定款一部変更の件", { bold: true }),
       p(
-        "　議長は、本店所在地を変更するため、定款中の本店の所在地に関する規定を変更し、本店を{new_minimum_district}に置く旨を提案し、審議の結果、満場一致をもって承認可決した。",
+        "　議長は、本店所在地を変更するため、定款第{articles_clause}条を変更し、本店を{new_minimum_district}に置く旨を提案し、審議の結果、満場一致をもって承認可決した。",
         { indent: 240 },
       ),
       p("　あわせて、本店移転の時期を{transfer_date_wareki}とすることを決議した。", {

@@ -30,6 +30,7 @@ const relocation: Relocation = {
   transfer_date: "2025-06-01",
   is_cross_jurisdiction: true,
   requires_articles_amendment: true,
+  articles_clause_number: 3,
   meeting_date: "2025-05-25",
   old_registry_office: "東京法務局港出張所",
   new_registry_office: "大阪法務局",
@@ -74,6 +75,13 @@ describe("E2E: 管轄外×株式会社×定款変更あり×取締役会設置",
     const text = docText(byType.application_new.buffer);
     expect(text).toContain("代表取締役等住所非表示措置を希望する");
     expect(text).toContain("実在性を証する書面");
+  });
+
+  it("議事録に出席株主数・議決権数・定款条番号が自動反映される", () => {
+    const text = docText(byType.minutes.buffer);
+    expect(text).toContain("2名");
+    expect(text).toContain("1,000個");
+    expect(text).toContain("定款第3条を変更");
   });
 
   it("株主リストに各株主と議決権割合が出力される", () => {

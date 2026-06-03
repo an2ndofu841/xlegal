@@ -42,6 +42,11 @@ export const articlesSchema = z.object({
     message: "定款の記載粒度を選択してください",
   }),
   same_municipality: z.boolean(),
+  articles_clause_number: z
+    .number({ message: "本店の条番号を入力してください" })
+    .int({ message: "本店の条番号は整数で入力してください" })
+    .min(1, { message: "本店の条番号は1以上で入力してください" })
+    .max(99, { message: "本店の条番号が大きすぎます" }),
 });
 
 /** 意思決定情報（ステップ5） */

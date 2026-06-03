@@ -59,6 +59,7 @@ export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: s
       transfer_date: body.transfer_date,
       is_cross_jurisdiction: !!body.is_cross_jurisdiction,
       requires_articles_amendment: requiresAmendment,
+      articles_clause_number: Number(body.articles_clause_number) || 3,
       meeting_date: body.meeting_date || null,
       old_registry_office: body.old_registry_office,
       new_registry_office: body.is_cross_jurisdiction ? body.new_registry_office || null : null,

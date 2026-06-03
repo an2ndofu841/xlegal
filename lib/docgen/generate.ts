@@ -88,6 +88,7 @@ export function buildDocData(
     decision_date: warekiOrBlank(relocation.meeting_date),
     apply_date: BLANK_DATE,
     registration_matters: registrationMatters,
+    articles_clause: relocation.articles_clause_number || 3,
   };
 
   switch (docType) {
