@@ -405,36 +405,87 @@ export default function Wizard({
 
         {currentStep === "shareholders" && (
           <>
-            <p className="text-sm leading-relaxed text-muted">
-              議決権割合の多い順に、合計が2/3に達するまで、または上位10名までのいずれか少ない方を入力してください（同順位は全員）。
-            </p>
+            <div className="rounded-lg bg-brand-50 p-4 text-sm leading-relaxed text-brand-800">
+              <p>
+                定款を変更するため、「株主リスト」という書類が必要です。
+                <strong>主要な株主（出資者）を上位から入力</strong>してください。
+              </p>
+              <p className="mt-2">
+                株主名簿や登記事項証明書、株式の引受け時の資料などで確認できます。
+                個人なら氏名と住所、法人なら名称と本店所在地を入力します。
+              </p>
+              <p className="mt-2 text-xs text-brand-600">
+                入力する範囲の目安：議決権の多い順に、合計が全体の2/3に達するまで。ただし最大でも上位10名まで（同じ割合の人がいれば全員）。株主が1人だけの会社なら、その1人だけでOKです。
+              </p>
+            </div>
+
             {fields.map((f, i) => (
-              <div key={f.id} className="rounded-lg border border-line p-4">
-                <div className="mb-2 flex items-center justify-between">
-                  <span className="text-sm font-medium">株主 {i + 1}</span>
-                  <button
-                    type="button"
-                    onClick={() => remove(i)}
-                    className="text-xs font-medium text-red-600 hover:underline"
-                  >
-                    削除
-                  </button>
+              <div key={f.id} className="rounded-xl border border-line p-4">
+                <div className="mb-3 flex items-center justify-between">
+                  <span className="text-sm font-semibold text-ink">株主 {i + 1}人目</span>
+                  {fields.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => remove(i)}
+                      className="text-xs font-medium text-red-600 hover:underline"
+                    >
+                      この株主を削除
+                    </button>
+                  )}
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <input {...register(`shareholders.${i}.name`)} className={inputCls} placeholder="氏名" />
-                  <input {...register(`shareholders.${i}.address`)} className={inputCls} placeholder="住所" />
-                  <input
-                    type="number"
-                    {...register(`shareholders.${i}.shares`, { valueAsNumber: true })}
-                    className={inputCls}
-                    placeholder="株式数"
-                  />
-                  <input
-                    type="number"
-                    {...register(`shareholders.${i}.voting_rights`, { valueAsNumber: true })}
-                    className={inputCls}
-                    placeholder="議決権数"
-                  />
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-medium text-muted">
+                      氏名（法人なら名称）
+                    </label>
+                    <input
+                      {...register(`shareholders.${i}.name`)}
+                      className={inputCls}
+                      placeholder="例: 山田 太郎 / 株式会社○○"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-muted">
+                      住所（法人なら本店所在地）
+                    </label>
+                    <input
+                      {...register(`shareholders.${i}.address`)}
+                      className={inputCls}
+                      placeholder="例: 東京都千代田区○○一丁目1番1号"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-muted">
+                        持っている株式数
+                        <HelpTip>
+                          この株主が保有している株式の数（株数）です。株主名簿や出資時の資料で確認できます。例：100株なら「100」と入力します。
+                        </HelpTip>
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        {...register(`shareholders.${i}.shares`, { valueAsNumber: true })}
+                        className={inputCls}
+                        placeholder="例: 100"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-muted">
+                        議決権の数
+                        <HelpTip>
+                          株主総会で投票できる権利の数です。特別な種類株式がなければ、通常は「株式数」と同じ数になります。迷ったら株式数と同じ数を入力してください。
+                        </HelpTip>
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        {...register(`shareholders.${i}.voting_rights`, { valueAsNumber: true })}
+                        className={inputCls}
+                        placeholder="通常は株式数と同じ"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}
